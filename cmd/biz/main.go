@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
-	"entgo.io/ent/examples/fs/ent"
-	"entgo.io/ent/examples/fs/ent/migrate"
 	"flag"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/realHoangHai/gmeet-biz/config"
-	"github.com/realHoangHai/gmeet-biz/middleware"
-	"github.com/realHoangHai/gmeet-biz/routes"
+	_ "github.com/lib/pq"
+	"github.com/realHoangHai/gmeet-biz/ent"
+	"github.com/realHoangHai/gmeet-biz/ent/migrate"
+	"github.com/realHoangHai/gmeet-biz/pkg/config"
+	"github.com/realHoangHai/gmeet-biz/pkg/handlers"
+	"github.com/realHoangHai/gmeet-biz/pkg/middleware"
+	"github.com/realHoangHai/gmeet-biz/pkg/routes"
 	"log"
 )
 
@@ -22,20 +24,19 @@ func main() {
 	}
 	defer client.Close()
 
-	ctx := context.Background()
-	err = client.Schema.Create(ctx,
+	if err = client.Schema.Create(context.Background(),
 		migrate.WithDropIndex(true),
 		migrate.WithDropColumn(true),
-	)
-	if err != nil {
+	); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
 
 	app := fiber.New()
 	middleware.SetupMiddleware(app)
-	routes.SetupApiV1(app)
+	handler := handlers.NewHandlers(client, conf)
+	routes.SetupApiV1(app, handler)
 
-	port := "8080"
+	port := "8088"
 	addr := flag.String("addr", port, "The address to bind to.")
 	flag.Parse()
 	log.Fatal(app.Listen(":" + *addr))

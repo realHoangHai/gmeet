@@ -1,6 +1,8 @@
 package config
 
-import "github.com/realHoangHai/gmeet-biz/utils"
+import (
+	"github.com/realHoangHai/gmeet-biz/pkg/utils"
+)
 
 type Config struct {
 	Database *DatabaseConfig
